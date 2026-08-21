@@ -1,13 +1,18 @@
 import subprocess
+import typer
 
-def get_diff():
+git_app = typer.Typer()
+
+@git_app.callback(invoke_without_command=True)
+def get_diff(ctx: typer.Context):
     try:
         result = subprocess.run(['git', 'diff'], capture_output=True, text=True)
 
         if result.returncode in [0,1]:
-            return result.stdout
+            typer.echo(result.stdout)
+            return
 
-        return f"Git Error: {result.stderr.strip()}"
+        typer.echo(f"Git Error: {result.stderr.strip()}")
 
     except FileNotFoundError:
-        return "Error: Git is not installed or not found in the system PATH."
+        typer.echo("Error: Git is not installed or not found in the system PATH.")
