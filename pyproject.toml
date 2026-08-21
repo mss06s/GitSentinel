@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitsentinel"
+version = "0.1.0"
+
+[project.scripts]
+gitsentinel = "gitsentinel.cli:main"
+
+[tools.setuptools.packages.find]
+where = ["src"]

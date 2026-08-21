@@ -1,0 +1,2 @@
+[console_scripts]
+gitsentinel = gitsentinel.cli:main

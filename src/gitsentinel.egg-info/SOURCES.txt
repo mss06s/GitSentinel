@@ -1,0 +1,8 @@
+pyproject.toml
+src/gitsentinel/__init__.py
+src/gitsentinel/cli.py
+src/gitsentinel.egg-info/PKG-INFO
+src/gitsentinel.egg-info/SOURCES.txt
+src/gitsentinel.egg-info/dependency_links.txt
+src/gitsentinel.egg-info/entry_points.txt
+src/gitsentinel.egg-info/top_level.txt
