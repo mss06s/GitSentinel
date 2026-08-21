@@ -1,3 +1,4 @@
+
 def main(): 
     print("GitSentinel")
     print("Local Codebase Auditing Tool")

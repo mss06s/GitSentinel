@@ -1,5 +1,6 @@
+import subprocess
+
 def get_diff():
-    import subprocess
     try:
         result = subprocess.run(['git', 'diff'], capture_output=True, text=True)
 
