@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gitsentinel"
 version = "0.1.0"
+dependencies = [
+	"typer>=0.9.0",
+]
 
 [project.scripts]
 gitsentinel = "gitsentinel.cli:main"
