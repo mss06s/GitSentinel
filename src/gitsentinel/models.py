@@ -6,3 +6,5 @@ class GitDiffInfo:
     path: str
     additions: int
     deletions: int
+    repo: str
+    
