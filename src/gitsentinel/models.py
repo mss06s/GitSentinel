@@ -7,4 +7,5 @@ class GitDiffInfo:
     additions: int
     deletions: int
     repo: str
+    status: str = "modified"  
     
