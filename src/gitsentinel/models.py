@@ -1,4 +1,14 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+
+@dataclass
+class Hunk:
+    old_start: int
+    old_count: int
+    new_start: int
+    new_count: int
+    lines: list[str]
+
 
 @dataclass
 class GitDiffInfo:
@@ -7,5 +17,5 @@ class GitDiffInfo:
     additions: int
     deletions: int
     repo: str
-    status: str = "modified"  
-    
+    status: str = "modified"
+    hunks: list[Hunk] = field(default_factory=list)
