@@ -1,7 +1,7 @@
 
 import re
 
-from gitsentinel.models import GitDiffInfo
+from gitsentinel.models import GitDiffInfo, Hunk
 
 
 HUNK_HEADER_RE = re.compile(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@')
@@ -49,30 +49,61 @@ def parse_diff(raw_diff: str, repo: str = ""):
     deletions = 0
     status = "modified"
 
+    file_hunks = []
+    current_hunk_header = None
+    current_hunk_lines = []
+
+    def finalize_hunk():
+        if current_hunk_header is not None:
+            old_start, old_count, new_start, new_count = current_hunk_header
+            file_hunks.append(Hunk(
+                old_start=old_start,
+                old_count=old_count,
+                new_start=new_start,
+                new_count=new_count,
+                lines=current_hunk_lines,
+            ))
+
     for line in raw_diff.splitlines():
-        if line.startswith('diff --git'): 
+        if line.startswith('diff --git'):
+            finalize_hunk()
+            current_hunk_header = None
+            current_hunk_lines = []
+
             if current_file is not None:
-                diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status))
+                diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status, hunks=file_hunks))
 
             parts = line.split(' ')
             current_file = parts[-1].replace('b/', '')
             additions = 0
             deletions = 0
             status = "modified"
+            file_hunks = []
+            continue
 
-        elif line.startswith('new file mode'):
+        hunk_header = parse_hunk_header(line)
+        if hunk_header is not None:
+            finalize_hunk()
+            current_hunk_header = hunk_header
+            current_hunk_lines = []
+            continue
+
+        if current_hunk_header is not None:
+            current_hunk_lines.append(line)
+
+        if line.startswith('new file mode'):
             status = "added"
         elif line.startswith('deleted file mode'):
             status = "deleted"
         elif line.startswith('rename to'):
             status = "renamed"
-        
         elif line.startswith('+') and not line.startswith('+++'):
             additions += 1
         elif line.startswith('-') and not line.startswith('---'):
             deletions += 1
 
+    finalize_hunk()
     if current_file is not None:
-        diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status))
+        diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status, hunks=file_hunks))
 
     return diff_info_list

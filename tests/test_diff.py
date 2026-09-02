@@ -1,5 +1,5 @@
 from gitsentinel.diff import parse_diff
-from gitsentinel.models import GitDiffInfo
+from gitsentinel.models import GitDiffInfo, Hunk
 
 
 def test_parse_diff_single_file():
@@ -16,7 +16,13 @@ index abc123..def456 100644
     result = parse_diff(raw_diff, repo="myrepo")
 
     assert result == [
-        GitDiffInfo(path="foo.py", additions=2, deletions=1, repo="myrepo")
+        GitDiffInfo(
+            path="foo.py", additions=2, deletions=1, repo="myrepo",
+            hunks=[
+                Hunk(old_start=1, old_count=2, new_start=1, new_count=2,
+                     lines=["-old line", "+new line", "+another new line"])
+            ],
+        )
     ]
 
 
@@ -40,8 +46,48 @@ index 111111..222222 100644
     result = parse_diff(raw_diff, repo="myrepo")
 
     assert result == [
-        GitDiffInfo(path="foo.py", additions=1, deletions=1, repo="myrepo"),
-        GitDiffInfo(path="bar.py", additions=2, deletions=0, repo="myrepo"),
+        GitDiffInfo(
+            path="foo.py", additions=1, deletions=1, repo="myrepo",
+            hunks=[
+                Hunk(old_start=1, old_count=1, new_start=1, new_count=1,
+                     lines=["-old foo", "+new foo"])
+            ],
+        ),
+        GitDiffInfo(
+            path="bar.py", additions=2, deletions=0, repo="myrepo",
+            hunks=[
+                Hunk(old_start=1, old_count=1, new_start=1, new_count=2,
+                     lines=["+new bar line", "+another bar line"])
+            ],
+        ),
+    ]
+
+
+def test_parse_diff_multiple_hunks_in_one_file():
+    raw_diff = """diff --git a/foo.py b/foo.py
+index abc123..def456 100644
+--- a/foo.py
++++ b/foo.py
+@@ -1,1 +1,1 @@
+-old top
++new top
+@@ -10,1 +10,2 @@
++new bottom line
+ context line
+"""
+
+    result = parse_diff(raw_diff, repo="myrepo")
+
+    assert result == [
+        GitDiffInfo(
+            path="foo.py", additions=2, deletions=1, repo="myrepo",
+            hunks=[
+                Hunk(old_start=1, old_count=1, new_start=1, new_count=1,
+                     lines=["-old top", "+new top"]),
+                Hunk(old_start=10, old_count=1, new_start=10, new_count=2,
+                     lines=["+new bottom line", " context line"]),
+            ],
+        )
     ]
 
 
@@ -64,7 +110,13 @@ index abc123..def456 100644
     result = parse_diff(raw_diff, repo="myrepo")
 
     assert result == [
-        GitDiffInfo(path="foo.py", additions=1, deletions=1, repo="myrepo")
+        GitDiffInfo(
+            path="foo.py", additions=1, deletions=1, repo="myrepo",
+            hunks=[
+                Hunk(old_start=1, old_count=1, new_start=1, new_count=1,
+                     lines=["-old line", "+new line"])
+            ],
+        )
     ]
 
 
@@ -82,7 +134,13 @@ index 0000000..abc123
     result = parse_diff(raw_diff, repo="myrepo")
 
     assert result == [
-        GitDiffInfo(path="foo.py", additions=2, deletions=0, repo="myrepo", status="added")
+        GitDiffInfo(
+            path="foo.py", additions=2, deletions=0, repo="myrepo", status="added",
+            hunks=[
+                Hunk(old_start=0, old_count=0, new_start=1, new_count=2,
+                     lines=["+new line one", "+new line two"])
+            ],
+        )
     ]
 
 
@@ -100,7 +158,13 @@ index abc123..0000000
     result = parse_diff(raw_diff, repo="myrepo")
 
     assert result == [
-        GitDiffInfo(path="foo.py", additions=0, deletions=2, repo="myrepo", status="deleted")
+        GitDiffInfo(
+            path="foo.py", additions=0, deletions=2, repo="myrepo", status="deleted",
+            hunks=[
+                Hunk(old_start=1, old_count=2, new_start=0, new_count=0,
+                     lines=["-old line one", "-old line two"])
+            ],
+        )
     ]
 
 
