@@ -1,2 +1,2 @@
 [console_scripts]
-gitsentinel = gitsentinel.cli:main
+gs = gitsentinel.cli:main

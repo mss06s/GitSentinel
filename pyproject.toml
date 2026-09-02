@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-gitsentinel = "gitsentinel.cli:main"
+gs = "gitsentinel.cli:main"
 
 [tools.setuptools.packages.find]
 where = ["src"]
