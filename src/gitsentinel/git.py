@@ -1,5 +1,7 @@
 from gitsentinel.diff import parse_diff
 
+import dataclasses
+import json
 import subprocess
 import typer
 
@@ -26,7 +28,7 @@ def run_git_diff() -> str:
 
 
 @git_app.callback(invoke_without_command=True)
-def get_diff(ctx: typer.Context):
+def get_diff(ctx: typer.Context, json_output: bool = typer.Option(False, "--json", help="Output as JSON")):
     if ctx.invoked_subcommand is None:
         try:
             raw_diff = run_git_diff()
@@ -34,8 +36,12 @@ def get_diff(ctx: typer.Context):
 
             parsed_diff = parse_diff(raw_diff, repo=repo_root)
 
-            for file in parsed_diff:
-                typer.echo(f"File: {file.path}, Additions: {file.additions}, Deletions: {file.deletions}, Repo: {file.repo}")
+            if json_output:
+                as_dicts = [dataclasses.asdict(file) for file in parsed_diff]
+                typer.echo(json.dumps(as_dicts, indent=2))
+            else:
+                for file in parsed_diff:
+                    typer.echo(f"File: {file.path}, Additions: {file.additions}, Deletions: {file.deletions}, Repo: {file.repo}")
 
         except RuntimeError as e:
             typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
