@@ -1,11 +1,5 @@
-from gitsentinel.diff import parse_diff
-
-import dataclasses
-import json
 import subprocess
-import typer
 
-git_app = typer.Typer()
 
 def run_git_diff() -> str:
     """
@@ -25,27 +19,6 @@ def run_git_diff() -> str:
         raise RuntimeError(f"Git Error: {result.stderr.strip()}")
 
     return result.stdout
-
-
-@git_app.callback(invoke_without_command=True)
-def get_diff(ctx: typer.Context, json_output: bool = typer.Option(False, "--json", help="Output as JSON")):
-    if ctx.invoked_subcommand is None:
-        try:
-            raw_diff = run_git_diff()
-            repo_root = get_repo_root()
-
-            parsed_diff = parse_diff(raw_diff, repo=repo_root)
-
-            if json_output:
-                as_dicts = [dataclasses.asdict(file) for file in parsed_diff]
-                typer.echo(json.dumps(as_dicts, indent=2))
-            else:
-                for file in parsed_diff:
-                    typer.echo(f"File: {file.path}, Additions: {file.additions}, Deletions: {file.deletions}, Repo: {file.repo}")
-
-        except RuntimeError as e:
-            typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
-            raise typer.Exit(code=1)
 
 
 def get_repo_root():

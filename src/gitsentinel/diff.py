@@ -1,4 +1,6 @@
 
+import dataclasses
+import json
 import re
 
 from gitsentinel.models import GitDiffInfo, Hunk
@@ -64,14 +66,24 @@ def parse_diff(raw_diff: str, repo: str = ""):
                 lines=current_hunk_lines,
             ))
 
+    def finalize_file():
+        if current_file is not None:
+            diff_info_list.append(GitDiffInfo(
+                path=current_file,
+                additions=additions,
+                deletions=deletions,
+                repo=repo,
+                status=status,
+                hunks=file_hunks,
+            ))
+
     for line in raw_diff.splitlines():
         if line.startswith('diff --git'):
             finalize_hunk()
             current_hunk_header = None
             current_hunk_lines = []
 
-            if current_file is not None:
-                diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status, hunks=file_hunks))
+            finalize_file()
 
             parts = line.split(' ')
             current_file = parts[-1].replace('b/', '')
@@ -103,7 +115,12 @@ def parse_diff(raw_diff: str, repo: str = ""):
             deletions += 1
 
     finalize_hunk()
-    if current_file is not None:
-        diff_info_list.append(GitDiffInfo(path=current_file, additions=additions, deletions=deletions, repo=repo, status=status, hunks=file_hunks))
+    finalize_file()
 
     return diff_info_list
+
+
+def diff_to_json(parsed_diff: list[GitDiffInfo], indent: int = None) -> str:
+    """Serializes a list of GitDiffInfo objects (and their nested Hunks) to a JSON string."""
+    as_dicts = [dataclasses.asdict(file) for file in parsed_diff]
+    return json.dumps(as_dicts, indent=indent)
