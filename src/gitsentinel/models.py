@@ -29,11 +29,10 @@ class GitDiffInfo:
 
 @dataclass
 class Finding:
-    """Represents a finding in the codebase."""
+    """Represents an issue found by the LLM in a diff."""
+    severity: Severity
+    category: str
     file_path: str
     line_number: int
     message: str
-    severity: Severity
-    rule_id: str
-    commit_hash: str
-    repo: str
+    suggestion: str
