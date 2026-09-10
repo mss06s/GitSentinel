@@ -1,6 +1,7 @@
 pyproject.toml
 src/gitsentinel/__init__.py
 src/gitsentinel/cli.py
+src/gitsentinel/context.py
 src/gitsentinel/diff.py
 src/gitsentinel/git.py
 src/gitsentinel/llm.py

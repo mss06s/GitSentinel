@@ -5,6 +5,7 @@ from rich.table import Table
 
 from gitsentinel.git import run_git_diff, get_repo_root
 from gitsentinel.diff import parse_diff, diff_to_json
+from gitsentinel.context import diff_context_to_json
 from gitsentinel.llm import summarize_diff, find_issues
 
 app = typer.Typer()
@@ -81,7 +82,7 @@ def findings():
         repo_root = get_repo_root()
 
         parsed_diff = parse_diff(raw_diff, repo=repo_root)
-        diff_json = diff_to_json(parsed_diff)
+        diff_json = diff_context_to_json(parsed_diff, repo_root)
 
         results = find_issues(diff_json)
 

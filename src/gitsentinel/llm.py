@@ -82,8 +82,10 @@ def find_issues(diff_json: str) -> list[Finding]:
     client = anthropic.Anthropic()
     prompt = (
         "Review the following git diff for bugs, security issues, and code "
-        "quality problems. Report every issue you find, including ones "
-        "you're only somewhat confident about:\n\n"
+        "quality problems. Each hunk includes a \"context\" field with the "
+        "surrounding code from the current file - use it to understand how "
+        "the changed lines fit into the rest of the function. Report every "
+        "issue you find, including ones you're only somewhat confident about:\n\n"
         f"{diff_json}"
     )
 
