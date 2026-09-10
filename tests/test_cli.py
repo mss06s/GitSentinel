@@ -6,12 +6,34 @@ from gitsentinel.cli import app
 runner = CliRunner()
 
 
-def test_default_command_shows_banner():
+class FakeSelect:
+    def __init__(self, answer):
+        self.answer = answer
+
+    def ask(self):
+        return self.answer
+
+
+def test_default_command_shows_banner(monkeypatch):
+    monkeypatch.setattr("gitsentinel.cli.questionary.select", lambda *a, **k: FakeSelect("Exit"))
+
     result = runner.invoke(app, [])
 
     assert result.exit_code == 0
     assert "GitSentinel" in result.stdout
     assert "Local Codebase Auditing Tool" in result.stdout
+
+
+def test_default_command_menu_routes_to_review(monkeypatch):
+    monkeypatch.setattr("gitsentinel.cli.questionary.select", lambda *a, **k: FakeSelect("Review changes (plain-English summary)"))
+    monkeypatch.setattr("gitsentinel.cli.run_git_diff", lambda: "fake diff")
+    monkeypatch.setattr("gitsentinel.cli.get_repo_root", lambda: "fake/repo")
+    monkeypatch.setattr("gitsentinel.cli.summarize_diff", lambda diff_json: "Mocked summary of changes")
+
+    result = runner.invoke(app, [])
+
+    assert result.exit_code == 0
+    assert "Mocked summary of changes" in result.stdout
 
 
 def test_review_command_prints_summary(monkeypatch):
