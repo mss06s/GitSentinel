@@ -6,6 +6,7 @@ src/gitsentinel/diff.py
 src/gitsentinel/git.py
 src/gitsentinel/llm.py
 src/gitsentinel/models.py
+src/gitsentinel/treesitter.py
 src/gitsentinel.egg-info/PKG-INFO
 src/gitsentinel.egg-info/SOURCES.txt
 src/gitsentinel.egg-info/dependency_links.txt

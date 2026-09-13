@@ -3,6 +3,7 @@ import json
 import os
 
 from gitsentinel.models import GitDiffInfo, Hunk
+from gitsentinel.treesitter import get_enclosing_function
 
 
 def get_context_window(repo_root: str, file_path: str, hunk: Hunk, window: int = 10) -> str:
@@ -39,7 +40,10 @@ def diff_context_to_json(parsed_diff: list[GitDiffInfo], repo_root: str, window:
         file_dict = dataclasses.asdict(file_info)
 
         for hunk_dict, hunk in zip(file_dict["hunks"], file_info.hunks):
-            hunk_dict["context"] = get_context_window(repo_root, file_info.path, hunk, window=window)
+            context = get_enclosing_function(repo_root, file_info.path, hunk)
+            if context is None:
+                context = get_context_window(repo_root, file_info.path, hunk, window=window)
+            hunk_dict["context"] = context
 
         enriched_files.append(file_dict)
 
