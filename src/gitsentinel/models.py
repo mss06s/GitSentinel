@@ -36,3 +36,5 @@ class Finding:
     line_number: int
     message: str
     suggestion: str
+    old_code: str
+    new_code: str

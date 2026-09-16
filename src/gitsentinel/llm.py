@@ -25,10 +25,19 @@ FINDINGS_TOOL = {
                         "line_number": {"type": "integer"},
                         "message": {"type": "string"},
                         "suggestion": {"type": "string"},
+                        "old_code": {
+                            "type": "string",
+                            "description": "The exact literal code snippet to replace, copied verbatim from the file's context field.",
+                        },
+                        "new_code": {
+                            "type": "string",
+                            "description": "The corrected code that should replace old_code.",
+                        },
                     },
                     "required": [
                         "severity", "category", "file_path",
                         "line_number", "message", "suggestion",
+                        "old_code", "new_code",
                     ],
                 },
             },
@@ -45,6 +54,8 @@ class FindingSchema(BaseModel):
     line_number: int
     message: str
     suggestion: str
+    old_code: str
+    new_code: str
 
 
 def summarize_diff(diff_json: str) -> str:
@@ -83,9 +94,14 @@ def find_issues(diff_json: str) -> list[Finding]:
     prompt = (
         "Review the following git diff for bugs, security issues, and code "
         "quality problems. Each hunk includes a \"context\" field with the "
-        "surrounding code from the current file - use it to understand how "
-        "the changed lines fit into the rest of the function. Report every "
-        "issue you find, including ones you're only somewhat confident about:\n\n"
+        "surrounding code from the current file, and a \"related_code\" field "
+        "with semantically similar code found elsewhere in the repo (e.g. other "
+        "call sites or similar functions) - use both to judge whether the change "
+        "is consistent with the rest of the codebase. Report every issue you "
+        "find, including ones you're only somewhat confident about. For each "
+        "finding, also provide old_code (the exact literal snippet to replace, "
+        "copied verbatim from the context field so it can be matched exactly) "
+        "and new_code (the fix):\n\n"
         f"{diff_json}"
     )
 

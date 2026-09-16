@@ -7,6 +7,8 @@ from gitsentinel.git import run_git_diff, get_repo_root
 from gitsentinel.diff import parse_diff, diff_to_json
 from gitsentinel.context import diff_context_to_json
 from gitsentinel.llm import summarize_diff, find_issues
+from gitsentinel.rag import build_index
+from gitsentinel.verify import verify_fix
 
 app = typer.Typer()
 
@@ -76,7 +78,7 @@ def review():
 
 
 @app.command()
-def findings():
+def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggested fixes against the test suite")):
     try:
         raw_diff = run_git_diff()
         repo_root = get_repo_root()
@@ -92,18 +94,35 @@ def findings():
         table.add_column("File")
         table.add_column("Line")
         table.add_column("Message")
+        if verify:
+            table.add_column("Verified")
 
         for finding in results:
-            table.add_row(
+            row = [
                 finding.severity.value,
                 finding.category,
                 finding.file_path,
                 str(finding.line_number),
                 finding.message,
-            )
+            ]
+            if verify:
+                result = verify_fix(repo_root, finding)
+                row.append("Yes" if result.verified else f"No - {result.message}")
+            table.add_row(*row)
 
         console = Console()
         console.print(table)
+
+    except RuntimeError as e:
+        typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+
+@app.command()
+def index():
+    try:
+        repo_root = get_repo_root()
+        count = build_index(repo_root)
+        typer.echo(f"Indexed {count} code chunks.")
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
