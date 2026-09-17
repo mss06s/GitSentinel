@@ -1,0 +1,11 @@
+diff --git a/sample.py b/sample.py
+index 1111111..2222222 100644
+--- a/sample.py
++++ b/sample.py
+@@ -1,5 +1,5 @@
+ def sum_all(items):
+     total = 0
+-    for i in range(len(items)):
++    for i in range(len(items) - 1):
+         total += items[i]
+     return total

@@ -1,0 +1,146 @@
+{
+  "catch_rate": 1.0,
+  "false_positive_rate": 0.5,
+  "category_accuracy": 0.6,
+  "severity_accuracy": 0.8,
+  "totals": {
+    "expected": 5,
+    "caught": 5,
+    "false_positives": 1,
+    "clean_fixtures": 2
+  },
+  "fixtures": [
+    {
+      "name": "clean_docstring",
+      "expected_count": 0,
+      "caught": 0,
+      "category_correct": 0,
+      "severity_correct": 0,
+      "false_positives": 0,
+      "actual_findings": []
+    },
+    {
+      "name": "clean_safe_divide",
+      "expected_count": 0,
+      "caught": 0,
+      "category_correct": 0,
+      "severity_correct": 0,
+      "false_positives": 1,
+      "actual_findings": [
+        {
+          "severity": "low",
+          "category": "floating-point-comparison",
+          "file_path": "math_utils.py",
+          "line_number": 2,
+          "message": "Direct equality check with integer 0 may not catch all floating-point zero values. For floating-point comparison, consider using an epsilon-based approach or checking abs(b) < epsilon."
+        }
+      ]
+    },
+    {
+      "name": "hardcoded_secret",
+      "expected_count": 1,
+      "caught": 1,
+      "category_correct": 1,
+      "severity_correct": 1,
+      "false_positives": 0,
+      "actual_findings": [
+        {
+          "severity": "high",
+          "category": "security",
+          "file_path": "config.py",
+          "line_number": 3,
+          "message": "Hardcoded API key exposed in source code"
+        }
+      ]
+    },
+    {
+      "name": "none_deref",
+      "expected_count": 1,
+      "caught": 1,
+      "category_correct": 0,
+      "severity_correct": 1,
+      "false_positives": 0,
+      "actual_findings": [
+        {
+          "severity": "high",
+          "category": "Runtime Error / Null Pointer Exception",
+          "file_path": "lookup.py",
+          "line_number": 2,
+          "message": "Potential AttributeError when user_id is not found in users dict. The dict.get() method returns None by default when the key is missing, and attempting to access [\"name\"] on None will raise an AttributeError."
+        },
+        {
+          "severity": "medium",
+          "category": "Logic Change / Behavioral Regression",
+          "file_path": "lookup.py",
+          "line_number": 2,
+          "message": "The refactoring changes error handling behavior. The original code using direct indexing (users[user_id]) would raise a KeyError with a clear message when user_id is missing. The new code using .get() silently returns None and then raises an AttributeError on the None value, which is less informative."
+        }
+      ]
+    },
+    {
+      "name": "off_by_one",
+      "expected_count": 1,
+      "caught": 1,
+      "category_correct": 0,
+      "severity_correct": 0,
+      "false_positives": 0,
+      "actual_findings": [
+        {
+          "severity": "high",
+          "category": "logic_error",
+          "file_path": "sample.py",
+          "line_number": 3,
+          "message": "Loop range excludes the last item in the list, causing incorrect sum calculation"
+        }
+      ]
+    },
+    {
+      "name": "sql_injection",
+      "expected_count": 1,
+      "caught": 1,
+      "category_correct": 1,
+      "severity_correct": 1,
+      "false_positives": 0,
+      "actual_findings": [
+        {
+          "severity": "high",
+          "category": "Security",
+          "file_path": "db.py",
+          "line_number": 3,
+          "message": "SQL Injection vulnerability: User input is directly concatenated into SQL query instead of using parameterized queries"
+        },
+        {
+          "severity": "high",
+          "category": "Code Quality",
+          "file_path": "db.py",
+          "line_number": 3,
+          "message": "Regression: Change removes proper parameterized query pattern that was already in place, introducing a significant security regression"
+        }
+      ]
+    },
+    {
+      "name": "style_nit",
+      "expected_count": 1,
+      "caught": 1,
+      "category_correct": 1,
+      "severity_correct": 1,
+      "false_positives": 0,
+      "actual_findings": [
+        {
+          "severity": "low",
+          "category": "code_style",
+          "file_path": "utils.py",
+          "line_number": 2,
+          "message": "Inconsistent spacing around operator"
+        },
+        {
+          "severity": "low",
+          "category": "code_quality",
+          "file_path": "utils.py",
+          "line_number": 1,
+          "message": "Unnecessary intermediate variable"
+        }
+      ]
+    }
+  ]
+}

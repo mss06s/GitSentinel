@@ -1,0 +1,3 @@
+[
+  {"file_path": "db.py", "line_number": 3, "category": "security", "expected_severity": "high"}
+]

@@ -1,0 +1,10 @@
+diff --git a/db.py b/db.py
+index 1111111..2222222 100644
+--- a/db.py
++++ b/db.py
+@@ -1,4 +1,4 @@
+ def get_user(conn, username):
+     cursor = conn.cursor()
+-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
++    cursor.execute("SELECT * FROM users WHERE username = '" + username + "'")
+     return cursor.fetchone()
