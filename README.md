@@ -61,6 +61,43 @@ gs index      # optional, but required for related_code in gs findings
 gs findings
 ```
 
+## Evals
+
+`evals/` measures the reviewer's actual quality against 7 hand-planted
+fixtures: a logic bug (off-by-one), a null-dereference bug, two security
+issues (hardcoded secret, SQL injection), a style-only nit, and two genuinely
+clean diffs that should produce zero findings. Scoring is line-based, not
+exact-text-match — a planted issue is "caught" if any finding lands within 2
+lines of it, since the model's wording varies run to run. Model responses
+are cached by diff content hash so re-running while refactoring costs
+nothing; `--refresh` forces a real call.
+
+```
+python evals/runner.py            # cached
+python evals/runner.py --refresh  # fresh API calls
+```
+
+**Current results** (Claude Haiku, `voyage-code-4`, single run, no cherry-picking):
+
+| Metric | Result |
+|---|---|
+| Catch rate | 100% (5/5 planted issues found) |
+| False positives | 1 finding across 2 clean fixtures |
+| Category accuracy | 60% (of caught findings) |
+| Severity accuracy | 80% (of caught findings) |
+
+Two honest notes from the actual run, not smoothed over:
+- The one false positive flagged `if b == 0:` (comparing a float to `0`) as a
+  low-severity floating-point-comparison nit on an otherwise-clean
+  divide-by-zero guard — a defensible-but-overzealous nitpick, not a
+  hallucinated bug.
+- Category accuracy is lower than severity accuracy because `category` is
+  free text in the tool schema (unlike `severity`, which is a constrained
+  enum) — the model called an off-by-one bug `"logic_error"` where the
+  fixture expected `"bug"`, which a loose substring match doesn't catch. That's
+  a real scoring-methodology limitation surfaced by actually running this,
+  not a reviewer failure.
+
 ## Why these choices
 
 - **Claude Haiku**, not Opus — diff summarization and findings extraction are
