@@ -20,8 +20,8 @@ def test_default_command_shows_banner(monkeypatch):
     result = runner.invoke(app, [])
 
     assert result.exit_code == 0
-    assert "GitSentinel" in result.stdout
     assert "Local Codebase Auditing Tool" in result.stdout
+    assert "Version: 0.1.0" in result.stdout
 
 
 def test_default_command_menu_routes_to_review(monkeypatch):

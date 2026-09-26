@@ -1,3 +1,6 @@
+import time
+
+import pyfiglet
 import questionary
 import typer
 from rich.console import Console
@@ -11,14 +14,34 @@ from gitsentinel.rag import build_index
 from gitsentinel.verify import verify_fix
 
 app = typer.Typer()
+console = Console()
+
+MENU_STYLE = questionary.Style([
+    ("qmark", "fg:#00d7ff bold"),
+    ("question", "bold"),
+    ("answer", "fg:#00d7ff bold"),
+    ("pointer", "fg:#00d7ff bold"),
+    ("highlighted", "fg:#00d7ff bold"),
+    ("selected", "fg:#00d7ff"),
+])
+
+
+def print_banner():
+    banner = pyfiglet.figlet_format("GitSentinel", font="standard")
+    console.print(f"[bold cyan]{banner}[/bold cyan]", end="")
+
+    subtitle = "Local Codebase Auditing Tool"
+    for char in subtitle:
+        console.print(char, end="", style="dim")
+        time.sleep(0.02)
+    console.print()
+    console.print("[dim]Version: 0.1.0[/dim]\n")
+
 
 @app.callback(invoke_without_command=True)
 def default_command(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
-        typer.echo("GitSentinel")
-        typer.echo("Local Codebase Auditing Tool")
-        typer.echo("Version: 0.1.0")
-        typer.echo("")
+        print_banner()
 
         choice = questionary.select(
             "What do you want to do?",
@@ -29,6 +52,7 @@ def default_command(ctx: typer.Context):
                 "Show diff as JSON",
                 "Exit",
             ],
+            style=MENU_STYLE,
         ).ask()
 
         if choice == "Review changes (plain-English summary)":
@@ -69,8 +93,10 @@ def review():
         parsed_diff = parse_diff(raw_diff, repo=repo_root)
         diff_json = diff_to_json(parsed_diff)
 
-        summary = summarize_diff(diff_json)
-        typer.echo(summary)
+        with console.status("[bold cyan]Reviewing diff with Claude...", spinner="dots"):
+            summary = summarize_diff(diff_json)
+
+        console.print(summary)
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
@@ -84,9 +110,12 @@ def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggest
         repo_root = get_repo_root()
 
         parsed_diff = parse_diff(raw_diff, repo=repo_root)
-        diff_json = diff_context_to_json(parsed_diff, repo_root)
 
-        results = find_issues(diff_json)
+        with console.status("[bold cyan]Gathering structural and semantic context...", spinner="dots"):
+            diff_json = diff_context_to_json(parsed_diff, repo_root)
+
+        with console.status("[bold cyan]Analyzing diff with Claude...", spinner="dots"):
+            results = find_issues(diff_json)
 
         table = Table(title="GitSentinel Findings")
         table.add_column("Severity")
@@ -106,11 +135,11 @@ def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggest
                 finding.message,
             ]
             if verify:
-                result = verify_fix(repo_root, finding)
+                with console.status(f"[bold cyan]Verifying fix for line {finding.line_number}...", spinner="dots"):
+                    result = verify_fix(repo_root, finding)
                 row.append("Yes" if result.verified else f"No - {result.message}")
             table.add_row(*row)
 
-        console = Console()
         console.print(table)
 
     except RuntimeError as e:
@@ -121,8 +150,11 @@ def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggest
 def index():
     try:
         repo_root = get_repo_root()
-        count = build_index(repo_root)
-        typer.echo(f"Indexed {count} code chunks.")
+
+        with console.status("[bold cyan]Indexing repository...", spinner="dots"):
+            count = build_index(repo_root)
+
+        console.print(f"Indexed {count} code chunks.")
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
@@ -133,4 +165,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
