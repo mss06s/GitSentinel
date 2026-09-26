@@ -4,6 +4,7 @@ import pyfiglet
 import questionary
 import typer
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
 from gitsentinel.git import run_git_diff, get_repo_root
@@ -24,6 +25,9 @@ MENU_STYLE = questionary.Style([
     ("highlighted", "fg:#00d7ff bold"),
     ("selected", "fg:#00d7ff"),
 ])
+
+STATUS_COLORS = {"added": "green", "deleted": "red", "renamed": "yellow", "modified": "cyan"}
+SEVERITY_COLORS = {"high": "red", "medium": "yellow", "low": "green"}
 
 
 def print_banner():
@@ -76,8 +80,22 @@ def diff(json_output: bool = typer.Option(False, "--json", help="Output as JSON"
         if json_output:
             typer.echo(diff_to_json(parsed_diff, indent=2))
         else:
+            table = Table(title="GitSentinel Diff")
+            table.add_column("Status")
+            table.add_column("File")
+            table.add_column("+", justify="right")
+            table.add_column("-", justify="right")
+
             for file in parsed_diff:
-                typer.echo(f"File: {file.path}, Additions: {file.additions}, Deletions: {file.deletions}, Repo: {file.repo}")
+                color = STATUS_COLORS.get(file.status, "white")
+                table.add_row(
+                    f"[{color}]{file.status}[/{color}]",
+                    file.path,
+                    f"[green]+{file.additions}[/green]",
+                    f"[red]-{file.deletions}[/red]",
+                )
+
+            console.print(table)
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
@@ -96,7 +114,7 @@ def review():
         with console.status("[bold cyan]Reviewing diff with Claude...", spinner="dots"):
             summary = summarize_diff(diff_json)
 
-        console.print(summary)
+        console.print(Panel(summary, title="Diff Summary", border_style="cyan"))
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
@@ -127,8 +145,9 @@ def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggest
             table.add_column("Verified")
 
         for finding in results:
+            color = SEVERITY_COLORS.get(finding.severity.value, "white")
             row = [
-                finding.severity.value,
+                f"[{color}]{finding.severity.value}[/{color}]",
                 finding.category,
                 finding.file_path,
                 str(finding.line_number),
@@ -137,7 +156,10 @@ def findings(verify: bool = typer.Option(False, "--verify", help="Verify suggest
             if verify:
                 with console.status(f"[bold cyan]Verifying fix for line {finding.line_number}...", spinner="dots"):
                     result = verify_fix(repo_root, finding)
-                row.append("Yes" if result.verified else f"No - {result.message}")
+                if result.verified:
+                    row.append("[green]Yes[/green]")
+                else:
+                    row.append(f"[red]No[/red] - {result.message}")
             table.add_row(*row)
 
         console.print(table)
@@ -154,7 +176,7 @@ def index():
         with console.status("[bold cyan]Indexing repository...", spinner="dots"):
             count = build_index(repo_root)
 
-        console.print(f"Indexed {count} code chunks.")
+        console.print(f"[bold green]✓[/bold green] Indexed {count} code chunks.")
 
     except RuntimeError as e:
         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
