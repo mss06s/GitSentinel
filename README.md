@@ -5,6 +5,8 @@ structurally (not just as text), and uses Claude to find real issues in your
 changes — with retrieval over the rest of your codebase and, on request,
 verification of its own suggested fixes.
 
+![GitSentinel demo](assets/demo.gif)
+
 ## What it does
 
 ```
